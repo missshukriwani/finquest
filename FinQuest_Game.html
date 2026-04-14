@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>FinQuest — Financial Literacy Game</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a18;min-height:100vh}
+.app{max-width:440px;margin:0 auto;background:#fff;min-height:100vh;position:relative}
+.screen{display:none;padding-bottom:2rem}
+.screen.active{display:block}
+/* Top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e8e6df;background:#fff;position:sticky;top:0;z-index:10}
+.tb-title{font-size:15px;font-weight:600;color:#1a1a18}
+.tb-sub{font-size:11px;color:#6b6b64;margin-top:1px}
+.xp-pill{font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;background:#faeeda;color:#633806;border:1px solid #EF9F27}
+/* Buttons */
+.btn{width:100%;padding:13px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid;transition:opacity .15s;margin-bottom:8px;font-family:inherit}
+.btn:hover{opacity:.88}
+.btn-p{background:#1D9E75;color:#fff;border-color:#1D9E75}
+.btn-s{background:#fff;color:#444441;border-color:#d3d1c7}
+.btn-info{background:#378ADD;color:#fff;border-color:#378ADD}
+.btn-warn{background:#BA7517;color:#fff;border-color:#BA7517}
+/* Cards */
+.card{background:#fff;border:1px solid #e8e6df;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.card-title{font-size:14px;font-weight:600;color:#1a1a18;margin-bottom:6px}
+.card-sub{font-size:12px;color:#6b6b64;line-height:1.6;margin-bottom:1rem}
+/* Inputs */
+input[type=text]{width:100%;padding:11px 14px;border:1px solid #d3d1c7;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:#1a1a18;margin-bottom:10px;outline:none}
+input[type=text]:focus{border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,.12)}
+/* Hero */
+.hero{padding:2rem 1rem 1.5rem;text-align:center}
+.hero-logo{width:72px;height:72px;border-radius:18px;background:#e1f5ee;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#085041}
+.hero-title{font-size:24px;font-weight:700;color:#1a1a18;margin-bottom:8px}
+.hero-sub{font-size:13px;color:#6b6b64;line-height:1.7;margin-bottom:1.5rem}
+/* Mode selector */
+.mode-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 1rem;margin-bottom:1rem}
+.mode-card{border:1px solid #e8e6df;border-radius:12px;padding:1.25rem 1rem;cursor:pointer;text-align:center;transition:all .15s;background:#fff}
+.mode-card:hover{border-color:#1D9E75;background:#f0fbf6}
+.mode-icon{width:40px;height:40px;border-radius:10px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700}
+.mode-name{font-size:13px;font-weight:600;color:#1a1a18;margin-bottom:3px}
+.mode-desc{font-size:11px;color:#6b6b64;line-height:1.4}
+/* Stat strip */
+.stat3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 1rem;margin-bottom:1rem}
+.s3c{background:#f5f5f0;border-radius:8px;padding:10px;text-align:center}
+.s3l{font-size:10px;color:#6b6b64;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
+.s3v{font-size:18px;font-weight:700;color:#1a1a18}
+/* Round list */
+.round-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid #e8e6df;border-radius:10px;margin:0 1rem 8px;background:#fff;cursor:pointer;transition:all .15s}
+.round-item:hover{border-color:#d3d1c7}
+.round-item.locked{opacity:.4;cursor:not-allowed}
+.round-item.done{background:#f0fbf6;border-color:#9FE1CB}
+.ri-dot{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.ri-name{font-size:13px;font-weight:600;color:#1a1a18}
+.ri-meta{font-size:11px;color:#6b6b64;margin-top:2px}
+.ri-xp{font-size:12px;font-weight:600;flex-shrink:0}
+/* Wait box */
+.wait-box{margin:1rem;padding:1.5rem;background:#f5f5f0;border-radius:12px;text-align:center;border:1px solid #e8e6df}
+.wait-title{font-size:14px;font-weight:600;color:#1a1a18;margin-bottom:6px}
+.wait-sub{font-size:12px;color:#6b6b64;line-height:1.6}
+/* Team join cards */
+.team-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #e8e6df;border-radius:10px;margin-bottom:8px;cursor:pointer;background:#fff;transition:all .15s}
+.team-card:hover{border-color:#d3d1c7}
+.team-card.selected{border-width:2px}
+.tc-dot{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.tc-name{font-size:14px;font-weight:600;color:#1a1a18}
+.tc-count{font-size:11px;color:#6b6b64;margin-top:2px}
+.tc-xp{font-size:13px;font-weight:700;margin-left:auto}
+/* Quiz */
+.qprog{display:flex;gap:4px;padding:0 1rem;margin-bottom:1rem}
+.qd{flex:1;height:5px;border-radius:3px;background:#e8e6df}
+.qd.done{background:#1D9E75}.qd.cur{background:#378ADD}
+.qcard{margin:0 1rem 1rem;background:#fff;border:1px solid #e8e6df;border-radius:12px;padding:1.25rem}
+.qnum{font-size:11px;color:#6b6b64;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.qtxt{font-size:15px;font-weight:600;color:#1a1a18;line-height:1.6;margin-bottom:1rem}
+.qopt{width:100%;padding:12px 14px;border:1px solid #d3d1c7;border-radius:8px;font-size:13px;color:#1a1a18;background:#fff;cursor:pointer;text-align:left;margin-bottom:8px;font-family:inherit;line-height:1.4;transition:all .12s}
+.qopt:hover{background:#f5f5f0}
+.qopt.ok{background:#e1f5ee;color:#085041;border-color:#1D9E75}
+.qopt.no{background:#fcebeb;color:#501313;border-color:#E24B4A}
+.qfb{margin:0 1rem 1rem;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.6;border:1px solid}
+/* Sim */
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 1rem;margin-bottom:1rem}
+.cbtn{padding:16px 10px;border:1px solid #d3d1c7;border-radius:10px;font-size:12px;font-weight:600;color:#1a1a18;background:#fff;cursor:pointer;text-align:center;line-height:1.5;font-family:inherit;transition:all .12s}
+.cbtn:hover{background:#f5f5f0}
+.cbtn.sel{border-width:2px}
+/* Result */
+.result-wrap{padding:1.5rem 1rem;text-align:center}
+.res-badge{width:76px;height:76px;border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700}
+.res-title{font-size:20px;font-weight:700;color:#1a1a18;margin-bottom:6px}
+.res-sub{font-size:13px;color:#6b6b64;margin-bottom:1rem}
+.res-xp{font-size:40px;font-weight:700;color:#1a1a18}
+.res-xlbl{font-size:12px;color:#6b6b64;margin-bottom:1.5rem}
+/* Team bar */
+.tbar-row{margin:0 1rem 10px}
+.tbar-head{display:flex;justify-content:space-between;margin-bottom:4px}
+.tbar-name{font-size:13px;font-weight:600}
+.tbar-pts{font-size:12px;color:#6b6b64}
+.tbar-track{height:10px;background:#e8e6df;border-radius:5px;overflow:hidden}
+.tbar-fill{height:100%;border-radius:5px;transition:width .5s}
+.tbar-members{font-size:11px;color:#6b6b64;margin-top:3px}
+/* Member row */
+.mrow{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0ede6;font-size:12px}
+.mrow:last-child{border-bottom:none}
+.you-tag{font-size:10px;padding:2px 7px;border-radius:10px;background:#e1f5ee;color:#085041;margin-left:5px}
+/* Lecturer */
+.lec-team-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.lec-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.unlock-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0ede6;font-size:12px}
+.unlock-row:last-child{border-bottom:none}
+.unlock-btn{font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;border:1px solid;font-family:inherit}
+/* Final */
+.final-wrap{padding:1.5rem 1rem;text-align:center}
+.trophy{width:80px;height:80px;border-radius:50%;background:#faeeda;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#633806}
+.lv-badge{display:inline-block;padding:5px 18px;border-radius:20px;font-size:13px;font-weight:600;margin-bottom:1.25rem}
+.rr-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0ede6;font-size:12px}
+.rr-row:last-child{border-bottom:none}
+/* Sect label */
+.sect{font-size:10px;font-weight:700;color:#6b6b64;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+/* Pad */
+.pad{padding:0 1rem}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HOME -->
+<div id="s-home" class="screen active">
+  <div class="hero">
+    <div class="hero-logo">FQ</div>
+    <div class="hero-title">FinQuest</div>
+    <div class="hero-sub">Financial literacy game · 6 rounds · 90 minutes<br>Cooperative team play · Individual XP counts</div>
+  </div>
+  <div class="mode-row">
+    <div class="mode-card" onclick="goTo('s-lecturer');buildLecturer()">
+      <div class="mode-icon" style="background:#e1f5ee;color:#085041">L</div>
+      <div class="mode-name">Lecturer</div>
+      <div class="mode-desc">Set up teams &amp; unlock rounds</div>
+    </div>
+    <div class="mode-card" onclick="goTo('s-register');buildTeamJoinList()">
+      <div class="mode-icon" style="background:#e6f1fb;color:#0C447C">S</div>
+      <div class="mode-name">Student</div>
+      <div class="mode-desc">Join your team &amp; play</div>
+    </div>
+  </div>
+  <div class="pad" style="margin-top:.5rem">
+    <div style="background:#f0fbf6;border:1px solid #9FE1CB;border-radius:10px;padding:12px 14px;font-size:12px;color:#085041;line-height:1.7">
+      <strong>How it works:</strong> Lecturer sets up team names and unlocks rounds one by one. Students join by picking their assigned team. Every XP a student earns adds to their team's cumulative total. Highest team score wins!
+    </div>
+  </div>
+</div>
+
+<!-- LECTURER CONSOLE -->
+<div id="s-lecturer" class="screen">
+  <div class="topbar">
+    <div><div class="tb-title">Lecturer console</div><div class="tb-sub">Manage teams &amp; rounds</div></div>
+    <button class="btn btn-s" style="width:auto;padding:5px 12px;font-size:11px;margin:0" onclick="goTo('s-home')">Exit</button>
+  </div>
+  <div class="pad" style="margin-top:1rem">
+    <div class="card">
+      <div class="card-title">Step 1 — Team names (up to 6)</div>
+      <div class="card-sub">Edit names below. Students will see these when joining.</div>
+      <div id="lec-teams"></div>
+      <button class="btn btn-s" style="margin-top:6px" onclick="addTeam()">+ Add team</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Step 2 — Unlock rounds</div>
+      <div class="card-sub">Unlock one round at a time to keep the class in sync.</div>
+      <div id="lec-unlock"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Step 3 — Live scoreboard</div>
+      <div id="lec-scores"></div>
+    </div>
+    <button class="btn btn-p" onclick="saveSettings()">Save &amp; broadcast to students</button>
+    <button class="btn btn-s" onclick="goTo('s-projector');buildProjector()">Open projector view</button>
+  </div>
+</div>
+
+<!-- PROJECTOR VIEW -->
+<div id="s-projector" class="screen">
+  <div class="topbar">
+    <div><div class="tb-title">Projector view</div><div class="tb-sub" id="proj-round-lbl">Round 1 unlocked</div></div>
+    <button class="btn btn-s" style="width:auto;padding:5px 12px;font-size:11px;margin:0" onclick="goTo('s-lecturer');buildLecturer()">Back</button>
+  </div>
+  <div style="text-align:center;padding:1rem 1rem .5rem">
+    <div style="font-size:12px;color:#6b6b64;margin-bottom:1rem">Team standings — display on projector screen</div>
+  </div>
+  <div id="proj-bars"></div>
+  <div style="margin:1rem;border-top:1px solid #e8e6df;padding-top:1rem">
+    <div class="sect" style="padding:0">Top individual scorers</div>
+    <div id="proj-players"></div>
+  </div>
+</div>
+
+<!-- STUDENT REGISTER -->
+<div id="s-register" class="screen">
+  <div class="topbar">
+    <div><div class="tb-title">Join FinQuest</div><div class="tb-sub">Enter your details</div></div>
+    <button class="btn btn-s" style="width:auto;padding:5px 12px;font-size:11px;margin:0" onclick="goTo('s-home')">Back</button>
+  </div>
+  <div class="pad" style="margin-top:1rem">
+    <div class="card">
+      <div class="card-title">Your details</div>
+      <div style="font-size:12px;color:#6b6b64;margin-bottom:4px">Your name</div>
+      <input type="text" id="stu-name" placeholder="e.g. Amirah Mazlan" maxlength="28">
+      <div style="font-size:12px;color:#6b6b64;margin-bottom:4px">Student ID (optional)</div>
+      <input type="text" id="stu-id" placeholder="e.g. 2023123456" maxlength="16">
+    </div>
+    <div class="card">
+      <div class="card-title">Select your team</div>
+      <div class="card-sub">Your lecturer has assigned you to a team. Pick it below.</div>
+      <div id="team-join-list"></div>
+    </div>
+    <button class="btn btn-p" onclick="joinGame()">Join FinQuest</button>
+  </div>
+</div>
+
+<!-- STUDENT LOBBY -->
+<div id="s-lobby" class="screen">
+  <div class="topbar">
+    <div><div class="tb-title" id="lob-name">Player</div><div class="tb-sub" id="lob-team-lbl">Team</div></div>
+    <div class="xp-pill" id="lob-xp-pill">0 XP</div>
+  </div>
+  <div class="stat3" style="margin-top:1rem">
+    <div class="s3c"><div class="s3l">My XP</div><div class="s3v" id="lob-myxp">0</div></div>
+    <div class="s3c"><div class="s3l">Team XP</div><div class="s3v" id="lob-txp">0</div></div>
+    <div class="s3c"><div class="s3l">Rank</div><div class="s3v" id="lob-rank">#—</div></div>
+  </div>
+  <div style="padding:0 1rem;margin-bottom:.5rem"><div class="sect">Rounds</div></div>
+  <div id="lob-rounds"></div>
+  <div class="card" style="margin:1rem">
+    <div class="card-title" id="lob-team-title">My team</div>
+    <div id="lob-members"></div>
+  </div>
+  <div class="pad">
+    <button class="btn btn-p" id="lob-play-btn" onclick="playNext()" style="display:none">Play next round</button>
+    <div style="text-align:center;font-size:11px;color:#6b6b64;margin-top:6px" id="lob-wait">Waiting for lecturer to unlock the next round...</div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="s-quiz" class="screen">
+  <div class="topbar">
+    <div><div class="tb-title" id="qz-title">Round</div><div class="tb-sub" id="qz-elem">Element</div></div>
+    <div class="xp-pill" id="qz-xp" style="background:#e6f1fb;color:#0C447C;border-color:#378ADD">0 XP</div>
+  </div>
+  <div style="margin-top:1rem">
+    <div class="qprog" id="qprog"></div>
+    <div id="qarea"></div>
+    <div id="qfb" class="qfb" style="display:none"></div>
+    <div class="pad"><button class="btn btn-p" id="qnext" onclick="nextQ()" style="display:none">Next</button></div>
+  </div>
+</div>
+
+<!-- SIM -->
+<div id="s-sim" class="screen">
+  <div class="topbar">
+    <div><div class="tb-title" id="sim-title">Round</div><div class="tb-sub" id="sim-elem">Simulation</div></div>
+    <div class="xp-pill" id="sim-xp" style="background:#e6f1fb;color:#0C447C;border-color:#378ADD">0 XP</div>
+  </div>
+  <div style="margin-top:1rem" id="sim-body"></div>
+</div>
+
+<!-- RESULT -->
+<div id="s-result" class="screen">
+  <div class="topbar">
+    <div><div class="tb-title">Round complete!</div></div>
+    <div class="xp-pill" id="res-pill" style="background:#e1f5ee;color:#085041;border-color:#1D9E75">+0 XP</div>
+  </div>
+  <div class="result-wrap">
+    <div class="res-badge" id="res-badge"></div>
+    <div class="res-title" id="res-title">Well done!</div>
+    <div class="res-sub" id="res-sub"></div>
+    <div class="res-xp" id="res-xp">+0</div>
+    <div class="res-xlbl">XP earned — added to your team total</div>
+    <div class="card" style="text-align:left;margin-top:1rem">
+      <div class="sect">Team update</div>
+      <div id="res-team"></div>
+    </div>
+    <div class="card" style="text-align:left">
+      <div class="sect">Key takeaway</div>
+      <div style="font-size:13px;color:#1a1a18;line-height:1.7" id="res-learn"></div>
+    </div>
+    <button class="btn btn-p" onclick="backLobby()">Back to game map</button>
+  </div>
+</div>
+
+<!-- FINAL -->
+<div id="s-final" class="screen">
+  <div class="final-wrap">
+    <div class="trophy">FQ</div>
+    <div style="font-size:20px;font-weight:700;color:#1a1a18;margin-bottom:4px" id="fin-name">Player</div>
+    <div style="font-size:12px;color:#6b6b64;margin-bottom:1rem" id="fin-team">Team</div>
+    <div class="stat3" style="padding:0;margin-bottom:1rem">
+      <div class="s3c"><div class="s3l">My XP</div><div class="s3v" id="fin-myxp">0</div></div>
+      <div class="s3c"><div class="s3l">Team XP</div><div class="s3v" id="fin-txp">0</div></div>
+      <div class="s3c"><div class="s3l">Level</div><div class="s3v" id="fin-lv">—</div></div>
+    </div>
+    <div class="lv-badge" id="fin-badge"></div>
+    <div class="card" style="text-align:left">
+      <div class="sect">Final team standings</div>
+      <div id="fin-standings"></div>
+    </div>
+    <div class="card" style="text-align:left">
+      <div class="sect">My round scores</div>
+      <div id="fin-rounds"></div>
+    </div>
+    <button class="btn btn-p" onclick="resetAll()">Play again</button>
+  </div>
+</div>
+
+</div><!-- end .app -->
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+const TC=['#1D9E75','#378ADD','#BA7517','#534AB7','#E24B4A','#D85A30'];
+let G={
+  teams:[
+    {name:'Team Ringgit',color:TC[0],members:[],totalXP:0},
+    {name:'Team Simpan',color:TC[1],members:[],totalXP:0},
+    {name:'Team Labur',color:TC[2],members:[],totalXP:0},
+    {name:'Team Bijak',color:TC[3],members:[],totalXP:0},
+    {name:'Team Modal',color:TC[4],members:[],totalXP:0},
+    {name:'Team Untung',color:TC[5],members:[],totalXP:0}
+  ],
+  unlocked:1,
+  player:{name:'',id:'',teamIdx:null,xp:0,roundXP:{},done:[]},
+  cur:null,qIdx:0,qScore:0,simChoice:null
+};
+
+const ROUNDS=[
+  {id:1,title:'Budget Blitz',elem:'Money management & budgeting',color:'#1D9E75',type:'quiz',maxXP:15,
+   takeaway:'A budget gives every ringgit a job. The 50/30/20 rule: 50% needs, 30% wants, 20% savings.',
+   qs:[
+    {q:'Using the 50/30/20 rule, what % of income should go to savings?',opts:['10%','20%','30%','5%'],ans:1,fb:'20% to savings — pay yourself first, before spending on wants.'},
+    {q:'Rent and transport are classified as?',opts:['Wants','Savings','Needs','Flexible'],ans:2,fb:'Needs are essential fixed costs. You cannot easily avoid rent or transport.'},
+    {q:'Spending more than you earn every month is called?',opts:['Budget surplus','Cash flow negative','Zero budgeting','Lifestyle boost'],ans:1,fb:'Negative cash flow means debt is growing. Even small monthly deficits compound dangerously over time.'},
+    {q:'Main purpose of tracking monthly expenses?',opts:['Feel guilty','Identify where money leaks and control it','Impress others','Pay less tax'],ans:1,fb:'Tracking reveals your spending patterns — the first step to intentional financial decisions.'},
+    {q:'No emergency fund + RM300 medical bill = most likely outcome?',opts:['Pay from savings','Borrow or use credit','Ignore it','Negotiate to zero'],ans:1,fb:'Without an emergency fund, unexpected costs become debt instantly. Even RM500 saved changes this completely.'}
+  ]},
+  {id:2,title:'Goal Setter',elem:'Saving & goal setting',color:'#378ADD',type:'sim',maxXP:20,
+   takeaway:'Pay yourself first. Set a SMART savings goal before allocating anything else.',
+   sim:{intro:"Amirah receives a RM500 bonus this month. She has 4 options. Which builds the strongest financial foundation?",
+    choices:[
+     {l:'Emergency fund\nRM500 saved',xp:20,fb:'Perfect. Emergency fund first — one unexpected crisis will no longer send her into debt.',c:'#1D9E75'},
+     {l:'New phone\nRM500 spent',xp:3,fb:'New phone feels great, but zero safety net remains. One emergency = instant debt spiral.',c:'#E24B4A'},
+     {l:'Split 50/50\nSave + spend',xp:12,fb:'Reasonable compromise. RM250 to emergency fund is better than nothing, but the goal takes longer.',c:'#BA7517'},
+     {l:'Unit trust\nInvest all',xp:8,fb:'Investing is smart — but without an emergency fund first, any crisis forces selling investments at a loss.',c:'#534AB7'}
+    ]}},
+  {id:3,title:'Debt Trap',elem:'Debt & credit management',color:'#E24B4A',type:'quiz',maxXP:15,
+   takeaway:'Minimum payment = maximum profit for the bank. Always pay more than minimum — even RM50 extra matters.',
+   qs:[
+    {q:'RM5,000 credit card at 18% p.a., paying minimum RM100/month. Time to clear it?',opts:['1 year','3 years','Over 7 years','6 months'],ans:2,fb:'At minimum payment, total repaid exceeds RM9,000 on a RM5,000 debt. The bank wins.'},
+    {q:'Debt avalanche method = pay off which first?',opts:['Smallest balance','Longest duration','Highest interest rate','Newest debt'],ans:2,fb:'Avalanche = highest interest first. This saves the most money mathematically over time.'},
+    {q:'PTPTN at 1% p.a. simple interest is considered?',opts:['Bad debt — all debt is bad','Good debt — low cost education investment','Neutral','Government trap'],ans:1,fb:'Good debt has low cost and funds an asset (education). PTPTN at 1% is one of the cheapest loans available.'},
+    {q:'Your CCRIS/CTOS credit score mainly affects?',opts:['Grocery prices','Loan eligibility and interest rate offered','Income tax amount','Grab account access'],ans:1,fb:'A good credit score unlocks lower interest rates — saving you thousands over a lifetime of borrowing.'},
+    {q:'3 BNPL apps, you forget one payment. What happens?',opts:['Nothing — auto-renews','Late fees plus possible negative credit record','Account cancelled only','You get a loyalty discount'],ans:1,fb:'BNPL late fees compound fast. Some providers report to credit bureaus, damaging your credit score.'}
+  ]},
+  {id:4,title:'Invest Quest',elem:'Investing & wealth building',color:'#BA7517',type:'sim',maxXP:20,
+   takeaway:'Compound interest is the eighth wonder of the world. Starting at 23 vs 33 can double your retirement wealth.',
+   sim:{intro:"You have RM5,000 to invest for 10 years. Which vehicle gives Amirah the best risk-adjusted long-term outcome?",
+    choices:[
+     {l:'ASB / Amanah\n~6–7% p.a.',xp:18,fb:'Excellent for Malaysian youth. Low-risk, historically 6–7% returns. RM5,000 grows to ~RM9,400 in 10 years.',c:'#1D9E75'},
+     {l:'Fixed deposit\n~3% p.a.',xp:10,fb:'Safe but barely beats inflation at 2.5–3%. RM5,000 grows to RM6,720 — minimal real return.',c:'#378ADD'},
+     {l:'Unit trust\n~8% p.a.',xp:15,fb:'Good diversification through professional management. ~8% turns RM5,000 into RM10,795 over 10 years.',c:'#BA7517'},
+     {l:'Crypto\n±50% p.a.',xp:5,fb:'Extremely high risk. Could triple or lose 70% of value. Without deep understanding, this is speculation, not investing.',c:'#E24B4A'}
+    ]}},
+  {id:5,title:'Rainy Day',elem:'Financial protection & insurance',color:'#534AB7',type:'quiz',maxXP:15,
+   takeaway:'Protection before growth. One uninsured medical bill can erase 2 years of savings in a single day.',
+   qs:[
+    {q:'Hospitalised 3 days, bill RM7,500, no medical insurance. What covers this?',opts:['EPF savings','Emergency fund (if she has one)','SOCSO medical benefits','Government hospital is free'],ans:1,fb:'SOCSO covers work injuries, not general illness. Without medical insurance, savings pay — or it becomes debt.'},
+    {q:'SOCSO Employment Injury Scheme covers?',opts:['All medical bills','Injuries at work or commuting to work','Personal accidents only','Hospital stays above RM10,000'],ans:1,fb:'SOCSO EIS covers work-related injuries and commuting accidents. It does NOT cover general illness.'},
+    {q:'Cheapest time to buy medical insurance is?',opts:['Age 35','Age 50','As young as possible','Age makes no difference'],ans:2,fb:'Insurance premiums increase with age and existing health conditions. The cheapest time is when you are young and healthy.'},
+    {q:'Key difference between Takaful and conventional insurance?',opts:['Takaful is always cheaper','Takaful is Shariah-compliant based on mutual contribution','Conventional covers more conditions','No difference in Malaysia'],ans:1,fb:'Takaful is based on ta\'awun (mutual aid) and structured to comply with Islamic finance principles.'},
+    {q:'Minimum recommended emergency fund before starting to invest?',opts:['RM500','1 month of expenses','3–6 months of living expenses','RM10,000 exactly'],ans:2,fb:'3–6 months creates a financial buffer. Without it, any crisis forces you to sell investments at a loss.'}
+  ]},
+  {id:6,title:'Digital Defender',elem:'Digital finance & gig economy',color:'#D85A30',type:'quiz',maxXP:15,
+   takeaway:'If it sounds too good to be true, it IS a scam. Always check SC Malaysia\'s investor alert list at sc.com.my.',
+   qs:[
+    {q:'WhatsApp message offers 20% monthly return on gold investment. This is most likely?',opts:['A legitimate opportunity','A Ponzi or investment scam','A bank promotion','A government scheme'],ans:1,fb:'20% monthly = 240% annual return. No legitimate investment offers this. Check sc.com.my investor alert list.'},
+    {q:'Priya earns RM3,800/month from freelance work. Must she file income tax?',opts:['No — freelancers are exempt','Yes — income above RM34,000/year is taxable','Only if she has an employer','Only after age 25'],ans:1,fb:'ALL income above RM34,000/year is taxable in Malaysia, including freelance. File Borang BE annually.'},
+    {q:'The real risk of using multiple BNPL apps is?',opts:['They charge 50% interest always','Multiple apps create invisible debt that is hard to track','They only report to Bank Negara','Only affects purchases above RM1,000'],ans:1,fb:'3–4 BNPL apps can create RM2,000+ in obligations that feel invisible until multiple due dates hit simultaneously.'},
+    {q:'Gig workers can voluntarily contribute to EPF through?',opts:['They cannot — employees only','EPF i-Saraan voluntary scheme','Bank auto-deduction','LHDN tax filing'],ans:1,fb:'EPF i-Saraan allows self-employed and gig workers to contribute voluntarily. Government matches 15% up to RM250/year.'},
+    {q:'A stranger sends RM50 to your e-wallet and asks you to transfer it elsewhere. You should?',opts:['Transfer it — free money!','Report and block — this is a money mule scam','Keep the RM50 and ignore','Ask friends for advice first'],ans:1,fb:'Money mule activity is a criminal offence under AMLA. Even unknowing participation can result in prosecution.'}
+   ]}
+];
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function $(id){return document.getElementById(id)}
+function goTo(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');window.scrollTo(0,0)}
+function sortedTeams(){return [...G.teams].sort((a,b)=>b.totalXP-a.totalXP)}
+
+// ── LECTURER ──────────────────────────────────────────────────────────────
+function buildLecturer(){
+  // Team name inputs
+  $('lec-teams').innerHTML=G.teams.map((t,i)=>`
+    <div class="lec-team-row">
+      <div class="lec-dot" style="background:${TC[i]||TC[0]}"></div>
+      <input type="text" value="${t.name}" maxlength="20" style="margin:0;flex:1;padding:8px 10px;font-size:13px"
+        oninput="G.teams[${i}].name=this.value">
+      ${G.teams.length>1?`<button onclick="removeTeam(${i})" style="font-size:11px;padding:4px 8px;border:1px solid #d3d1c7;border-radius:6px;background:#fff;cursor:pointer;margin-left:4px">✕</button>`:''}
+    </div>`).join('');
+  // Unlock controls
+  $('lec-unlock').innerHTML=ROUNDS.map(r=>`
+    <div class="unlock-row">
+      <span>R${r.id}: ${r.title}</span>
+      <button class="unlock-btn" style="${G.unlocked>=r.id?'background:#e1f5ee;color:#085041;border-color:#1D9E75':'background:#fff;color:#6b6b64;border-color:#d3d1c7'}"
+        onclick="setUnlock(${r.id})">${G.unlocked>=r.id?'Unlocked':'Unlock'}</button>
+    </div>`).join('');
+  // Scoreboard
+  buildLecScores();
+}
+
+function buildLecScores(){
+  const el=$('lec-scores');
+  if(!el)return;
+  const max=Math.max(...G.teams.map(t=>t.totalXP),1);
+  el.innerHTML=sortedTeams().map((t,i)=>`
+    <div class="tbar-row">
+      <div class="tbar-head"><span class="tbar-name" style="color:${t.color}">#${i+1} ${t.name}</span><span class="tbar-pts">${t.totalXP} XP · ${t.members.length} member${t.members.length!==1?'s':''}</span></div>
+      <div class="tbar-track"><div class="tbar-fill" style="width:${Math.round((t.totalXP/max)*100)}%;background:${t.color}"></div></div>
+      <div class="tbar-members">${t.members.map(m=>m.name+(m.xp?' ('+m.xp+' XP)':'')).join(' · ')||'No members yet'}</div>
+    </div>`).join('');
+}
+
+function addTeam(){
+  if(G.teams.length>=6){alert('Maximum 6 teams allowed.');return;}
+  const idx=G.teams.length;
+  G.teams.push({name:'Team '+(idx+1),color:TC[idx],members:[],totalXP:0});
+  buildLecturer();
+}
+
+function removeTeam(i){
+  if(G.teams.length<=1){alert('Need at least 1 team.');return;}
+  G.teams.splice(i,1);
+  buildLecturer();
+}
+
+function setUnlock(id){G.unlocked=id;buildLecturer();}
+
+function saveSettings(){buildTeamJoinList();buildLecScores();alert('Settings saved! Students can now join and see your teams.');}
+
+function buildProjector(){
+  $('proj-round-lbl').textContent='Round '+G.unlocked+' of 6 unlocked';
+  const max=Math.max(...G.teams.map(t=>t.totalXP),1);
+  $('proj-bars').innerHTML=sortedTeams().map((t,i)=>`
+    <div class="tbar-row">
+      <div class="tbar-head"><span style="font-size:16px;font-weight:700;color:${t.color}">#${i+1} ${t.name}</span><span style="font-size:15px;font-weight:700;color:#1a1a18">${t.totalXP} XP</span></div>
+      <div class="tbar-track" style="height:14px"><div class="tbar-fill" style="width:${Math.round((t.totalXP/max)*100)}%;background:${t.color}"></div></div>
+      <div class="tbar-members">${t.members.map(m=>m.name+' ('+m.xp+')').join(' · ')||'No members yet'}</div>
+    </div>`).join('');
+  const allP=G.teams.flatMap(t=>t.members.map(m=>({...m,team:t.name,col:t.color}))).sort((a,b)=>b.xp-a.xp).slice(0,5);
+  $('proj-players').innerHTML=allP.length?allP.map((p,i)=>`
+    <div class="mrow">
+      <span style="font-size:12px;font-weight:600;color:#6b6b64;width:18px">#${i+1}</span>
+      <span style="flex:1;font-size:13px;color:#1a1a18">${p.name} <span style="font-size:11px;color:${p.col}">${p.team}</span></span>
+      <span style="font-size:13px;font-weight:700">${p.xp} XP</span>
+    </div>`).join(''):'<div style="font-size:12px;color:#6b6b64">No players yet</div>';
+}
+
+// ── STUDENT JOIN ──────────────────────────────────────────────────────────
+function buildTeamJoinList(){
+  const el=$('team-join-list');
+  if(!el)return;
+  el.innerHTML=G.teams.map((t,i)=>`
+    <div class="team-card ${G.player.teamIdx===i?'selected':''}" id="tj-${i}"
+      style="${G.player.teamIdx===i?'border-color:'+t.color+';background:#f9fffe':''}"
+      onclick="selectTeam(${i})">
+      <div class="tc-dot" style="background:${t.color}20;color:${t.color};border:1px solid ${t.color}">${t.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+      <div>
+        <div class="tc-name" style="color:${t.color}">${t.name}</div>
+        <div class="tc-count">${t.members.length} member${t.members.length!==1?'s':''} joined</div>
+      </div>
+      <span class="tc-xp" style="color:${t.color}">${t.totalXP} XP</span>
+    </div>`).join('');
+}
+
+function selectTeam(i){G.player.teamIdx=i;buildTeamJoinList();}
+
+function joinGame(){
+  const n=$('stu-name').value.trim();
+  if(!n){alert('Please enter your name!');return;}
+  if(G.player.teamIdx===null){alert('Please select your team!');return;}
+  G.player.name=n;
+  G.player.id=$('stu-id').value.trim();
+  const t=G.teams[G.player.teamIdx];
+  if(!t.members.find(m=>m.name===n)) t.members.push({name:n,xp:0,id:G.player.id});
+  buildLobby();
+  goTo('s-lobby');
+}
+
+// ── LOBBY ─────────────────────────────────────────────────────────────────
+function buildLobby(){
+  const p=G.player;const t=G.teams[p.teamIdx];
+  $('lob-name').textContent=p.name;
+  $('lob-team-lbl').textContent=t.name;
+  $('lob-xp-pill').textContent=p.xp+' XP';
+  $('lob-myxp').textContent=p.xp;
+  $('lob-txp').textContent=t.totalXP;
+  const rank=sortedTeams().findIndex(x=>x.name===t.name)+1;
+  $('lob-rank').textContent='#'+rank;
+  $('lob-rounds').innerHTML=ROUNDS.map(r=>{
+    const done=p.done.includes(r.id);
+    const locked=r.id>G.unlocked;
+    return `<div class="round-item ${done?'done':locked?'locked':''}" onclick="${!locked&&!done?'launchRound('+r.id+')':''}">
+      <div class="ri-dot" style="background:${done?'#e1f5ee':locked?'#f5f5f0':r.color+'20'};color:${done?'#085041':locked?'#6b6b64':r.color};border:1px solid ${done?'#1D9E75':locked?'#e8e6df':r.color}">${done?'✓':r.id}</div>
+      <div style="flex:1"><div class="ri-name">${r.title}</div><div class="ri-meta">${r.elem}</div></div>
+      <div class="ri-xp" style="color:${r.color}">${done?(p.roundXP[r.id]||0)+' XP':r.maxXP+' max'}</div>
+    </div>`;}).join('');
+  $('lob-team-title').textContent=t.name+' — members';
+  $('lob-members').innerHTML=t.members.map(m=>`
+    <div class="mrow">
+      <span>${m.name}${m.name===p.name?'<span class="you-tag">you</span>':''}</span>
+      <span style="font-weight:700">${m.xp} XP</span>
+    </div>`).join('');
+  const next=ROUNDS.find(r=>!p.done.includes(r.id)&&r.id<=G.unlocked);
+  $('lob-play-btn').style.display=next?'block':'none';
+  $('lob-wait').textContent=next?'':p.done.length===6?'All rounds complete! View your final results.':'Waiting for lecturer to unlock the next round...';
+  if(p.done.length===6) setTimeout(showFinal,500);
+}
+
+function playNext(){
+  const next=ROUNDS.find(r=>!G.player.done.includes(r.id)&&r.id<=G.unlocked);
+  if(next) launchRound(next.id);
+}
+
+function launchRound(id){
+  const r=ROUNDS.find(x=>x.id===id);
+  G.cur=r;G.qIdx=0;G.qScore=0;G.simChoice=null;
+  if(r.type==='quiz') startQuiz(r);
+  else startSim(r);
+}
+
+// ── QUIZ ──────────────────────────────────────────────────────────────────
+function startQuiz(r){
+  $('qz-title').textContent='Round '+r.id+': '+r.title;
+  $('qz-elem').textContent=r.elem;
+  $('qz-xp').textContent='0 XP';
+  renderQ();goTo('s-quiz');
+}
+
+function renderQ(){
+  const r=G.cur;const q=r.qs[G.qIdx];
+  $('qprog').innerHTML=r.qs.map((_,i)=>`<div class="qd ${i<G.qIdx?'done':i===G.qIdx?'cur':''}"></div>`).join('');
+  $('qarea').innerHTML=`<div class="qcard">
+    <div class="qnum">Question ${G.qIdx+1} of ${r.qs.length} · +3 XP if correct</div>
+    <div class="qtxt">${q.q}</div>
+    ${q.opts.map((o,i)=>`<button class="qopt" id="op${i}" onclick="ansQ(${i})">${o}</button>`).join('')}
+  </div>`;
+  $('qfb').style.display='none';$('qnext').style.display='none';
+}
+
+function ansQ(i){
+  const q=G.cur.qs[G.qIdx];
+  document.querySelectorAll('.qopt').forEach(b=>b.disabled=true);
+  $('op'+i).classList.add(i===q.ans?'ok':'no');
+  if(i!==q.ans)$('op'+q.ans).classList.add('ok');
+  if(i===q.ans)G.qScore++;
+  const fb=$('qfb');
+  fb.style.display='block';
+  fb.textContent=(i===q.ans?'Correct! ':'Not quite. ')+q.fb;
+  fb.style.background=i===q.ans?'#e1f5ee':'#fcebeb';
+  fb.style.color=i===q.ans?'#085041':'#501313';
+  fb.style.borderColor=i===q.ans?'#1D9E75':'#E24B4A';
+  $('qz-xp').textContent=(G.qScore*3)+' XP';
+  $('qnext').style.display='block';
+  $('qnext').textContent=G.qIdx<G.cur.qs.length-1?'Next question':'See my results';
+}
+
+function nextQ(){
+  G.qIdx++;
+  if(G.qIdx<G.cur.qs.length) renderQ();
+  else finishRound(G.qScore*3);
+}
+
+// ── SIM ───────────────────────────────────────────────────────────────────
+function startSim(r){
+  $('sim-title').textContent='Round '+r.id+': '+r.title;
+  $('sim-elem').textContent=r.elem;
+  $('sim-xp').textContent='0 XP';
+  const d=r.sim;
+  $('sim-body').innerHTML=`
+    <div class="card" style="margin:0 1rem 1rem">
+      <div class="card-title">Your scenario</div>
+      <div class="card-sub">${d.intro}</div>
+    </div>
+    <div class="choice-grid">
+      ${d.choices.map((c,i)=>`<div class="cbtn" id="cb${i}" onclick="pickSim(${i})" style="border-color:${c.c}">${c.l.replace('\n','<br>')}</div>`).join('')}
+    </div>
+    <div id="simfb" style="display:none" class="card" style="margin:0 1rem 1rem"></div>
+    <div class="pad"><button class="btn btn-p" id="sim-done" onclick="finishSim()" style="display:none">Complete round</button></div>`;
+  goTo('s-sim');
+}
+
+function pickSim(i){
+  if(G.simChoice!==null)return;
+  G.simChoice=i;
+  const c=G.cur.sim.choices[i];
+  document.querySelectorAll('.cbtn').forEach((b,j)=>{b.style.opacity=j===i?'1':'.4';if(j===i)b.style.borderWidth='2px';});
+  const fb=$('simfb');
+  fb.style.display='block';
+  fb.innerHTML=`<div style="font-size:15px;font-weight:700;color:${c.c};margin-bottom:6px">+${c.xp} XP earned</div><div style="font-size:13px;color:#1a1a18;line-height:1.6">${c.fb}</div>`;
+  $('sim-xp').textContent=c.xp+' XP';
+  $('sim-done').style.display='block';
+}
+
+function finishSim(){finishRound(G.cur.sim.choices[G.simChoice].xp);}
+
+// ── FINISH ROUND ──────────────────────────────────────────────────────────
+function finishRound(xp){
+  const r=G.cur;const p=G.player;const t=G.teams[p.teamIdx];
+  p.xp+=xp;p.roundXP[r.id]=xp;p.done.push(r.id);
+  if(G.unlocked===r.id&&r.id<6)G.unlocked++;
+  const m=t.members.find(x=>x.name===p.name);
+  if(m)m.xp=(m.xp||0)+xp;
+  t.totalXP=t.members.reduce((s,x)=>s+(x.xp||0),0);
+  const good=xp>=r.maxXP*0.7;
+  $('res-badge').textContent=good?'A':'B';
+  $('res-badge').style.background=good?'#e1f5ee':'#faeeda';
+  $('res-badge').style.color=good?'#085041':'#633806';
+  $('res-title').textContent=good?'Excellent!':xp>=r.maxXP*0.4?'Good effort!':'Keep learning!';
+  $('res-sub').textContent='Round '+r.id+' — '+r.elem;
+  $('res-xp').textContent='+'+xp;
+  $('res-pill').textContent='+'+xp+' XP';
+  $('res-learn').textContent=r.takeaway;
+  const sorted=sortedTeams();
+  $('res-team').innerHTML=`
+    <div class="mrow"><span>Your contribution this round</span><span style="font-weight:700;color:${r.color}">+${xp} XP</span></div>
+    <div class="mrow"><span>${t.name} total XP</span><span style="font-weight:700">${t.totalXP} XP</span></div>
+    <div class="mrow"><span>Team rank</span><span style="font-weight:700">#${sorted.findIndex(x=>x.name===t.name)+1} of ${G.teams.length}</span></div>`;
+  goTo('s-result');
+}
+
+function backLobby(){
+  if(G.player.done.length===6)showFinal();
+  else{buildLobby();goTo('s-lobby');}
+}
+
+// ── FINAL ─────────────────────────────────────────────────────────────────
+function showFinal(){
+  const p=G.player;const t=G.teams[p.teamIdx];
+  const lv=p.xp>=80?'Gold':p.xp>=50?'Silver':'Bronze';
+  const lvStyle=lv==='Gold'?'background:#faeeda;color:#633806;border:1px solid #BA7517':lv==='Silver'?'background:#f1efe8;color:#444441;border:1px solid #888780':'background:#e6f1fb;color:#0C447C;border:1px solid #378ADD';
+  $('fin-name').textContent=p.name+(p.id?' · '+p.id:'');
+  $('fin-team').textContent=t.name+' · '+p.xp+' XP personal contribution';
+  $('fin-myxp').textContent=p.xp;$('fin-txp').textContent=t.totalXP;$('fin-lv').textContent=lv;
+  $('fin-badge').textContent=lv+' FinQuest Graduate';$('fin-badge').style.cssText=lvStyle;
+  const sorted=sortedTeams();
+  $('fin-standings').innerHTML=sorted.map((x,i)=>`
+    <div class="tbar-row">
+      <div class="tbar-head"><span style="font-size:13px;font-weight:700;color:${x.color}">#${i+1} ${x.name}${x.name===t.name?' ← your team':''}</span><span style="font-size:12px;color:#6b6b64">${x.totalXP} XP</span></div>
+      <div class="tbar-track"><div class="tbar-fill" style="width:${sorted[0].totalXP>0?Math.round((x.totalXP/sorted[0].totalXP)*100):0}%;background:${x.color}"></div></div>
+      <div class="tbar-members">${x.members.map(m=>m.name+' ('+m.xp+' XP)').join(' · ')||'—'}</div>
+    </div>`).join('');
+  $('fin-rounds').innerHTML=ROUNDS.map(r=>`
+    <div class="rr-row"><span>${r.title}</span><span style="font-weight:700">${p.roundXP[r.id]||0} / ${r.maxXP} XP</span></div>`).join('');
+  goTo('s-final');
+}
+
+function resetAll(){
+  G={teams:G.teams.map(t=>({...t,members:[],totalXP:0})),unlocked:1,
+     player:{name:'',id:'',teamIdx:null,xp:0,roundXP:{},done:[]},
+     cur:null,qIdx:0,qScore:0,simChoice:null};
+  goTo('s-home');
+}
+</script>
+</body>
+</html>
