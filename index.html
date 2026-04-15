@@ -306,7 +306,14 @@ input[type=text]:focus{border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117
       <div class="sect">My round scores</div>
       <div id="fin-rounds"></div>
     </div>
-    <button class="btn btn-p" onclick="resetAll()">Play again</button>
+    <div style="background:#e1f5ee;border:1px solid #1D9E75;border-radius:10px;padding:14px;margin-top:1rem;text-align:left">
+      <div style="font-size:13px;font-weight:700;color:#085041;margin-bottom:6px">Submit your score to lecturer</div>
+      <div style="font-size:12px;color:#085041;line-height:1.7;margin-bottom:10px">Your scores below will be shown. Tap Submit — your Google Form opens. Copy your scores into the form and tap Submit on the form.</div>
+      <div id="score-preview" style="background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:10px;border:1px solid #9FE1CB;font-size:12px;color:#085041;line-height:1.9"></div>
+      <button class="btn btn-p" id="submit-btn" onclick="submitScore()" style="background:#085041;border-color:#085041;margin-bottom:0">Submit my score to lecturer</button>
+      <div id="submit-done" style="display:none;text-align:center;font-size:12px;color:#085041;margin-top:8px;font-weight:600">Google Form opened! Fill in your details and tap Submit on the form.</div>
+    </div>
+    <button class="btn btn-s" onclick="resetAll()" style="margin-top:8px">Play again</button>
   </div>
 </div>
 
@@ -656,51 +663,61 @@ function showFinal(){
   $('fin-rounds').innerHTML=ROUNDS.map(r=>`
     <div class="rr-row"><span>${r.title}</span><span style="font-weight:700">${p.roundXP[r.id]||0} / ${r.maxXP} XP</span></div>`).join('');
   goTo('s-final');
+  setTimeout(renderScorePreview,100);
 }
 
-function renderScorePreview(){
-  var p=G.player;var t=G.teams[p.teamIdx];
-  var lv=p.xp>=80?'Gold':p.xp>=50?'Silver':'Bronze';
-  var el=g('score-preview');
-  if(!el)return;
-  el.innerHTML=
-    '<strong>Name:</strong> '+p.name+'<br>'+
-    '<strong>Team:</strong> '+(t?t.name:'-')+'<br>'+
-    '<strong>Total XP:</strong> '+p.xp+' XP  |  <strong>Level:</strong> '+lv+'<br>'+
-    '<strong>R1:</strong> '+(p.roundXP[1]||0)+
-    '  <strong>R2:</strong> '+(p.roundXP[2]||0)+
-    '  <strong>R3:</strong> '+(p.roundXP[3]||0)+
-    '  <strong>R4:</strong> '+(p.roundXP[4]||0)+
-    '  <strong>R5:</strong> '+(p.roundXP[5]||0)+
-    '  <strong>R6:</strong> '+(p.roundXP[6]||0);
-}
-function submitScore(){
-  var p=G.player;var t=G.teams[p.teamIdx];
-  var lv=p.xp>=80?'Gold':p.xp>=50?'Silver':'Bronze';
-  var scores=
-    'Name: '+p.name+
-    ' | Team: '+(t?t.name:'-')+
-    ' | Total XP: '+p.xp+
-    ' | Level: '+lv+
-    ' | R1:'+( p.roundXP[1]||0)+
-    ' R2:'+(p.roundXP[2]||0)+
-    ' R3:'+(p.roundXP[3]||0)+
-    ' R4:'+(p.roundXP[4]||0)+
-    ' R5:'+(p.roundXP[5]||0)+
-    ' R6:'+(p.roundXP[6]||0);
-  var url='https://forms.gle/G6wJsiDrnCYg18mA9';
-  window.open(url,'_blank');
-  var btn=document.querySelector('[onclick="submitScore()"]');
-  if(btn){btn.textContent='Form opened! Complete and submit it.';btn.style.background='#1D6B3E';}
-  setTimeout(function(){
-    alert('Your score to copy into the form:\n\n'+scores+'\n\nThe form is open in your browser. Fill in your details and tap Submit!');
-  },800);
-}
 function resetAll(){
   G={teams:G.teams.map(t=>({...t,members:[],totalXP:0})),unlocked:1,
      player:{name:'',id:'',teamIdx:null,xp:0,roundXP:{},done:[]},
      cur:null,qIdx:0,qScore:0,simChoice:null};
   goTo('s-home');
+}
+
+function renderScorePreview(){
+  var p=G.player;
+  var t=G.teams[p.teamIdx];
+  var lv=p.xp>=80?'Gold':p.xp>=50?'Silver':'Bronze';
+  var el=document.getElementById('score-preview');
+  if(!el) return;
+  el.innerHTML=
+    '<strong>Name:</strong> '+p.name+'<br>'+
+    '<strong>Team:</strong> '+(t?t.name:'-')+'<br>'+
+    '<strong>Total XP:</strong> '+p.xp+'  |  <strong>Level:</strong> '+lv+'<br>'+
+    '<strong>R1 (Budgeting):</strong> '+(p.roundXP[1]||0)+' XP &nbsp;&nbsp;'+
+    '<strong>R2 (Saving):</strong> '+(p.roundXP[2]||0)+' XP<br>'+
+    '<strong>R3 (Debt):</strong> '+(p.roundXP[3]||0)+' XP &nbsp;&nbsp;'+
+    '<strong>R4 (Investing):</strong> '+(p.roundXP[4]||0)+' XP<br>'+
+    '<strong>R5 (Protection):</strong> '+(p.roundXP[5]||0)+' XP &nbsp;&nbsp;'+
+    '<strong>R6 (Digital):</strong> '+(p.roundXP[6]||0)+' XP';
+}
+
+function submitScore(){
+  var p=G.player;
+  var t=G.teams[p.teamIdx];
+  var lv=p.xp>=80?'Gold':p.xp>=50?'Silver':'Bronze';
+  var scoreText=
+    'Name: '+p.name+
+    '\nTeam: '+(t?t.name:'-')+
+    '\nTotal XP: '+p.xp+
+    '\nLevel: '+lv+
+    '\nR1 Budgeting: '+(p.roundXP[1]||0)+
+    '\nR2 Saving: '+(p.roundXP[2]||0)+
+    '\nR3 Debt: '+(p.roundXP[3]||0)+
+    '\nR4 Investing: '+(p.roundXP[4]||0)+
+    '\nR5 Protection: '+(p.roundXP[5]||0)+
+    '\nR6 Digital: '+(p.roundXP[6]||0);
+  window.open('https://forms.gle/G6wJsiDrnCYg18mA9','_blank');
+  var btn=document.getElementById('submit-btn');
+  if(btn){btn.textContent='Form opened!';btn.style.background='#1D6B3E';}
+  var done=document.getElementById('submit-done');
+  if(done) done.style.display='block';
+  setTimeout(function(){
+    if(window.confirm('Copy your scores to paste into the form?\n\n'+scoreText+'\n\nClick OK to copy, then paste into the Google Form.')){
+      if(navigator.clipboard){
+        navigator.clipboard.writeText(scoreText).catch(function(){});
+      }
+    }
+  },1000);
 }
 </script>
 </body>
