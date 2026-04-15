@@ -658,6 +658,44 @@ function showFinal(){
   goTo('s-final');
 }
 
+function renderScorePreview(){
+  var p=G.player;var t=G.teams[p.teamIdx];
+  var lv=p.xp>=80?'Gold':p.xp>=50?'Silver':'Bronze';
+  var el=g('score-preview');
+  if(!el)return;
+  el.innerHTML=
+    '<strong>Name:</strong> '+p.name+'<br>'+
+    '<strong>Team:</strong> '+(t?t.name:'-')+'<br>'+
+    '<strong>Total XP:</strong> '+p.xp+' XP  |  <strong>Level:</strong> '+lv+'<br>'+
+    '<strong>R1:</strong> '+(p.roundXP[1]||0)+
+    '  <strong>R2:</strong> '+(p.roundXP[2]||0)+
+    '  <strong>R3:</strong> '+(p.roundXP[3]||0)+
+    '  <strong>R4:</strong> '+(p.roundXP[4]||0)+
+    '  <strong>R5:</strong> '+(p.roundXP[5]||0)+
+    '  <strong>R6:</strong> '+(p.roundXP[6]||0);
+}
+function submitScore(){
+  var p=G.player;var t=G.teams[p.teamIdx];
+  var lv=p.xp>=80?'Gold':p.xp>=50?'Silver':'Bronze';
+  var scores=
+    'Name: '+p.name+
+    ' | Team: '+(t?t.name:'-')+
+    ' | Total XP: '+p.xp+
+    ' | Level: '+lv+
+    ' | R1:'+( p.roundXP[1]||0)+
+    ' R2:'+(p.roundXP[2]||0)+
+    ' R3:'+(p.roundXP[3]||0)+
+    ' R4:'+(p.roundXP[4]||0)+
+    ' R5:'+(p.roundXP[5]||0)+
+    ' R6:'+(p.roundXP[6]||0);
+  var url='https://forms.gle/G6wJsiDrnCYg18mA9';
+  window.open(url,'_blank');
+  var btn=document.querySelector('[onclick="submitScore()"]');
+  if(btn){btn.textContent='Form opened! Complete and submit it.';btn.style.background='#1D6B3E';}
+  setTimeout(function(){
+    alert('Your score to copy into the form:\n\n'+scores+'\n\nThe form is open in your browser. Fill in your details and tap Submit!');
+  },800);
+}
 function resetAll(){
   G={teams:G.teams.map(t=>({...t,members:[],totalXP:0})),unlocked:1,
      player:{name:'',id:'',teamIdx:null,xp:0,roundXP:{},done:[]},
